@@ -20,11 +20,15 @@ Here we are using an end-to-end deep learning architecture consisting of two sub
 
 ![](./README_imgs/02.png)
 
-Where Lseg and Lcls represent segmentation and classification losses, respectively. For both, we use the cross-entropy loss. 
+Where Lseg and Lcls represent segmentation and classification losses, respectively. 
+
+For both, we use the cross-entropy loss. 
+
 The remaining parameters are: 
-δ  :	an additional classification loss weight,
- γ :	an indicator of the presence of pixel-level annotation 
-λ  :	a balancing factor that balances the contribution of each sub-network in the final                 loss. 
+- δ :	an additional classification loss weight,
+- γ :	an indicator of the presence of pixel-level annotation 
+- λ :	a balancing factor that balances the contribution of each sub-network in the final loss. 
+
 Note that λ, γ and δ do not replace the learning rate η in SGD, but complement it. δ enables us to balance the contributions of both losses, which can be on different scales since the segmentation loss is averaged over all pixels, most of which are non-anomalous. 
 
 ## Architecture
