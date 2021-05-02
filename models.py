@@ -141,3 +141,7 @@ class GradientMultiplyLayer(torch.autograd.Function):
     def backward(ctx, grad_output):
         mask_bw, = ctx.saved_tensors
         return grad_output.mul(mask_bw), None
+
+if __name__ == '__main__':
+    model = SegDecNet(torch.device('cpu'),512,1248,1)
+    print(model)
