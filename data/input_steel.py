@@ -9,14 +9,14 @@ def read_split(train_num: int, num_segmented: int, kind: str):
     fn = f"STEEL/split_{train_num}_{num_segmented}.pyb"
     with open(f"splits/{fn}", "rb") as f:
         train_samples, test_samples, validation_samples = pickle.load(f)
-        if kind == 'TRAIN':
+        if kind == "TRAIN":
             return train_samples
-        elif kind == 'TEST':
+        elif kind == "TEST":
             return test_samples
-        elif kind == 'VAL':
+        elif kind == "VAL":
             return validation_samples
         else:
-            raise Exception('Unknown')
+            raise Exception("Unknown")
 
 
 def read_annotations(fn):
@@ -50,7 +50,9 @@ class SteelDataset(Dataset):
 
             if sample in annotations:
                 rle = list(map(int, annotations[sample].split(" ")))
-                pos_samples.append((None, None, None, is_segmented, img_path, rle, sample))
+                pos_samples.append(
+                    (None, None, None, is_segmented, img_path, rle, sample)
+                )
             else:
                 neg_samples.append((None, None, None, True, img_path, None, sample))
 
@@ -59,6 +61,10 @@ class SteelDataset(Dataset):
 
         self.num_pos = len(pos_samples)
         self.num_neg = len(neg_samples)
-        self.len = 2 * len(pos_samples) if self.kind in ['TRAIN'] else len(pos_samples) + len(neg_samples)
+        self.len = (
+            2 * len(pos_samples)
+            if self.kind in ["TRAIN"]
+            else len(pos_samples) + len(neg_samples)
+        )
 
         self.init_extra()

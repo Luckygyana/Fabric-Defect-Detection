@@ -16,7 +16,7 @@ class Dataset(torch.utils.data.Dataset):
         self.grayscale: bool = self.cfg.INPUT_CHANNELS == 1
 
         self.num_negatives_per_one_positive: int = 1
-        self.frequency_sampling: bool = self.cfg.FREQUENCY_SAMPLING and self.kind == 'TRAIN'
+        self.frequency_sampling: bool = self.cfg.FREQUENCY_SAMPLING and self.kind == "TRAIN"
 
     def init_extra(self):
         self.counter = 0
@@ -26,27 +26,37 @@ class Dataset(torch.utils.data.Dataset):
         self.neg_retrieval_freq = np.zeros(shape=self.num_neg)
         self.pos_retrieval_freq = np.zeros(shape=self.num_pos)
 
-    def __getitem__(self, index) -> (torch.Tensor, torch.Tensor, torch.Tensor, bool, str):
+    def __getitem__(
+        self, index
+    ) -> (torch.Tensor, torch.Tensor, torch.Tensor, bool, str):
 
         if self.counter >= self.len:
             self.counter = 0
             if self.frequency_sampling:
-                sample_probability = 1 - (self.neg_retrieval_freq / np.max(self.neg_retrieval_freq))
-                sample_probability = sample_probability - np.median(sample_probability) + 1
-                sample_probability = sample_probability ** (np.log(len(sample_probability)) * 4)
+                sample_probability = 1 - (
+                    self.neg_retrieval_freq / np.max(self.neg_retrieval_freq)
+                )
+                sample_probability = (
+                    sample_probability - np.median(sample_probability) + 1
+                )
+                sample_probability = sample_probability ** (
+                    np.log(len(sample_probability)) * 4
+                )
                 sample_probability = sample_probability / np.sum(sample_probability)
 
                 # use replace=False for to get only unique values
-                self.neg_imgs_permutation = np.random.choice(range(self.num_neg),
-                                                             size=self.num_negatives_per_one_positive * self.num_pos,
-                                                             p=sample_probability,
-                                                             replace=False)
+                self.neg_imgs_permutation = np.random.choice(
+                    range(self.num_neg),
+                    size=self.num_negatives_per_one_positive * self.num_pos,
+                    p=sample_probability,
+                    replace=False,
+                )
             else:
                 self.neg_imgs_permutation = np.random.permutation(self.num_neg)
 
             self.pos_imgs_permutation = np.random.permutation(self.num_pos)
 
-        if self.kind == 'TRAIN':
+        if self.kind == "TRAIN":
             if index >= self.num_pos:
                 ix = index % self.num_pos
                 ix = self.neg_imgs_permutation[ix]
@@ -64,23 +74,39 @@ class Dataset(torch.utils.data.Dataset):
                 ix = index - self.num_neg
                 item = self.pos_samples[ix]
 
-        image, seg_mask, seg_loss_mask, is_segmented, image_path, seg_mask_path, sample_name = item
+        (
+            image,
+            seg_mask,
+            seg_loss_mask,
+            is_segmented,
+            image_path,
+            seg_mask_path,
+            sample_name,
+        ) = item
 
         if self.cfg.ON_DEMAND_READ:  # STEEL only so far
             if image_path == -1 or seg_mask_path == -1:
-                raise Exception('For ON_DEMAND_READ image and seg_mask paths must be set in read_contents')
+                raise Exception(
+                    "For ON_DEMAND_READ image and seg_mask paths must be set in read_contents"
+                )
             img = self.read_img_resize(image_path, self.grayscale, self.image_size)
             if seg_mask_path is None:  # good sample
                 seg_mask = np.zeros_like(img)
             elif isinstance(seg_mask_path, list):
                 seg_mask = self.rle_to_mask(seg_mask_path, self.image_size)
             else:
-                seg_mask, _ = self.self.read_label_resize(seg_mask_path, self.image_size)
+                seg_mask, _ = self.self.read_label_resize(
+                    seg_mask_path, self.image_size
+                )
 
             if np.max(seg_mask) == np.min(seg_mask):  # good sample
                 seg_loss_mask = np.ones_like(seg_mask)
             else:
-                seg_loss_mask = self.distance_transform(seg_mask, self.cfg.WEIGHTED_SEG_LOSS_MAX, self.cfg.WEIGHTED_SEG_LOSS_P)
+                seg_loss_mask = self.distance_transform(
+                    seg_mask,
+                    self.cfg.WEIGHTED_SEG_LOSS_MAX,
+                    self.cfg.WEIGHTED_SEG_LOSS_P,
+                )
 
             image = self.to_tensor(img)
             seg_mask = self.to_tensor(self.downsize(seg_mask))
@@ -123,26 +149,38 @@ class Dataset(torch.utils.data.Dataset):
         x = torch.from_numpy(x)
         return x
 
-    def distance_transform(self, mask: np.ndarray, max_val: float, p: float) -> np.ndarray:
+    def distance_transform(
+        self, mask: np.ndarray, max_val: float, p: float
+    ) -> np.ndarray:
         dst_trf = distance_transform_edt(mask)
 
         if dst_trf.max() > 0:
-            dst_trf = (dst_trf / dst_trf.max())
+            dst_trf = dst_trf / dst_trf.max()
             dst_trf = (dst_trf ** p) * max_val
 
         dst_trf[mask == 0] = 1.0
         return np.array(dst_trf, dtype=np.float32)
 
     def downsize(self, image: np.ndarray, downsize_factor: int = 8) -> np.ndarray:
-        img_t = torch.from_numpy(np.expand_dims(image, 0 if len(image.shape) == 3 else (0, 1)).astype(np.float32))
+        img_t = torch.from_numpy(
+            np.expand_dims(image, 0 if len(image.shape) == 3 else (0, 1)).astype(
+                np.float32
+            )
+        )
         # img_t = torch.from_numpy(np.expand_dims(image, 0).astype(np.float32))
         img_t = torch.nn.ReflectionPad2d(padding=(downsize_factor))(img_t)
-        image_np = torch.nn.AvgPool2d(kernel_size=2 * downsize_factor + 1, stride=downsize_factor)(img_t).detach().numpy()
+        image_np = (
+            torch.nn.AvgPool2d(
+                kernel_size=2 * downsize_factor + 1, stride=downsize_factor
+            )(img_t)
+            .detach()
+            .numpy()
+        )
         return image_np[0] if len(image.shape) == 3 else image_np[0, 0]
 
     def rle_to_mask(self, rle, image_size):
         if len(rle) % 2 != 0:
-            raise Exception('Suspicious')
+            raise Exception("Suspicious")
 
         w, h = image_size
         mask_label = np.zeros(w * h, dtype=np.float32)
@@ -150,6 +188,6 @@ class Dataset(torch.utils.data.Dataset):
         positions = rle[0::2]
         length = rle[1::2]
         for pos, le in zip(positions, length):
-            mask_label[pos - 1:pos + le - 1] = 1
-        mask = np.reshape(mask_label, (h, w), order='F')
+            mask_label[pos - 1 : pos + le - 1] = 1
+        mask = np.reshape(mask_label, (h, w), order="F")
         return mask

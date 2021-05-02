@@ -94,7 +94,6 @@ def prediction(original, img):
     if output_seg_mask.shape[0] < output_seg_mask.shape[1]:
         output_seg_mask = np.transpose(output_seg_mask)
 
-    
     vmax_value = max(1, np.max(output_seg_mask))
     # bbox_generate(output_seg_mask)
     plt.subplot(1, 4, 2)
@@ -102,13 +101,15 @@ def prediction(original, img):
     plt.yticks([])
     plt.title(f"Output: {decision:.5f}")
     plt.imshow(output_seg_mask, cmap="jet", vmax=vmax_value)
-    
+
     plt.subplot(1, 4, 3)
     plt.xticks([])
     plt.yticks([])
-    plt.title('Output scaled')
-    plt.imshow((output_seg_mask / output_seg_mask.max() * 255).astype(np.uint8), cmap="jet")
-    
+    plt.title("Output scaled")
+    plt.imshow(
+        (output_seg_mask / output_seg_mask.max() * 255).astype(np.uint8), cmap="jet"
+    )
+
     plt.subplot(1, 4, 4)
     plt.xticks([])
     plt.yticks([])
@@ -117,12 +118,11 @@ def prediction(original, img):
     cv2.rectangle(copy_img, (x1, y1), (x2, y2), (0, 0, 255), 3)
     plt.title("BBOX")
     plt.imshow(copy_img, cmap="gray")
-    
 
     plt.savefig(f"result.jpg", bbox_inches="tight", dpi=300)
     img = Image.open("result.jpg")
     st.success("Success")
-    st.image([img],use_column_width=True)
+    st.image([img], use_column_width=True)
     # st.image(original)
 
 
@@ -136,4 +136,3 @@ else:
     file_bytes = np.asarray(bytearray(uploaded_file.read()), dtype=np.uint8)
     opencv_image = cv2.imdecode(file_bytes, 0)
     prediction(uploaded_file, opencv_image)
-

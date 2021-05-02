@@ -24,7 +24,7 @@ class Config:
     FOLD = None
     TRAIN_NUM = None
     NUM_SEGMENTED = None
-    RESULTS_PATH = "./RESULTS" # TODO use when releasing
+    RESULTS_PATH = "./RESULTS"  # TODO use when releasing
     # RESULTS_PATH = "/home/jakob/outputs/WEAKLY_LABELED/PC_DEBUG" if "CONTAINER_NODE" in os.environ else "/opt/workspace/host_storage_hdd/REWRITE/v2"
     SPLITS_PATH = None
 
@@ -45,11 +45,15 @@ class Config:
     INPUT_CHANNELS = None
 
     def init_extra(self):
-        if self.WEIGHTED_SEG_LOSS and (self.WEIGHTED_SEG_LOSS_P is None or self.WEIGHTED_SEG_LOSS_MAX is None):
-            raise Exception("You also need to specify p and scaling factor for weighted segmentation loss!")
+        if self.WEIGHTED_SEG_LOSS and (
+            self.WEIGHTED_SEG_LOSS_P is None or self.WEIGHTED_SEG_LOSS_MAX is None
+        ):
+            raise Exception(
+                "You also need to specify p and scaling factor for weighted segmentation loss!"
+            )
         if self.NUM_SEGMENTED is None:
             raise Exception("Missing NUM_SEGMENTED!")
-        if self.DATASET == 'KSDD':
+        if self.DATASET == "KSDD":
             self.INPUT_WIDTH = 512
             self.INPUT_HEIGHT = 1408
             self.INPUT_CHANNELS = 1
@@ -61,7 +65,7 @@ class Config:
             if self.FOLD is None:
                 raise Exception("Missing FOLD for KSDD dataset!")
 
-        elif self.DATASET == 'DAGM':
+        elif self.DATASET == "DAGM":
             self.INPUT_WIDTH = 512
             self.INPUT_HEIGHT = 512
             self.INPUT_CHANNELS = 1
@@ -69,14 +73,16 @@ class Config:
                 raise Exception("Missing NUM_SEGMENTED for DAGM dataset!")
             if self.FOLD is None:
                 raise Exception("Missing FOLD for DAGM dataset!")
-        elif self.DATASET == 'STEEL':
+        elif self.DATASET == "STEEL":
             self.INPUT_WIDTH = 1600
             self.INPUT_HEIGHT = 256
             self.INPUT_CHANNELS = 1
 
             self.VALIDATE_ON_TEST = False
             self.USE_BEST_MODEL = True
-            print("Will use best model according to validation loss, validation is not performed on test set!")
+            print(
+                "Will use best model according to validation loss, validation is not performed on test set!"
+            )
             if not self.ON_DEMAND_READ:
                 print("Will use ON_DEMAND_READ even though it is set on False!")
                 self.ON_DEMAND_READ = True
@@ -84,14 +90,14 @@ class Config:
                 raise Exception("Missing TRAIN_NUM for STEEL dataset!")
             if self.NUM_SEGMENTED is None:
                 raise Exception("Missing NUM_SEGMENTED for STEEL dataset!")
-        elif self.DATASET == 'KSDD2':
+        elif self.DATASET == "KSDD2":
             self.INPUT_WIDTH = 232
             self.INPUT_HEIGHT = 640
             self.INPUT_CHANNELS = 3
             if self.NUM_SEGMENTED is None:
                 raise Exception("Missing NUM_SEGMENTED for KSDD2 dataset!")
         else:
-            raise Exception('Unknown dataset {}'.format(self.DATASET))
+            raise Exception("Unknown dataset {}".format(self.DATASET))
 
     def merge_from_args(self, args):
         self.GPU = args.GPU
@@ -110,18 +116,30 @@ class Config:
         self.FREQUENCY_SAMPLING = args.FREQUENCY_SAMPLING
         self.NUM_SEGMENTED = args.NUM_SEGMENTED
 
-        if args.FOLD is not None: self.FOLD = args.FOLD
-        if args.TRAIN_NUM is not None: self.TRAIN_NUM = args.TRAIN_NUM
-        if args.RESULTS_PATH is not None: self.RESULTS_PATH = args.RESULTS_PATH
-        if args.VALIDATE is not None: self.VALIDATE = args.VALIDATE
-        if args.VALIDATE_ON_TEST is not None: self.VALIDATE_ON_TEST = args.VALIDATE_ON_TEST
-        if args.VALIDATION_N_EPOCHS is not None: self.VALIDATION_N_EPOCHS = args.VALIDATION_N_EPOCHS
-        if args.USE_BEST_MODEL is not None: self.USE_BEST_MODEL = args.USE_BEST_MODEL
-        if args.ON_DEMAND_READ is not None: self.TRAIN_NUM = args.ON_DEMAND_READ
-        if args.REPRODUCIBLE_RUN is not None: self.TRAIN_NUM = args.REPRODUCIBLE_RUN
-        if args.MEMORY_FIT is not None: self.TRAIN_NUM = args.MEMORY_FIT
-        if args.SAVE_IMAGES is not None: self.SAVE_IMAGES = args.SAVE_IMAGES
-        if args.DILATE is not None: self.DILATE = args.DILATE
+        if args.FOLD is not None:
+            self.FOLD = args.FOLD
+        if args.TRAIN_NUM is not None:
+            self.TRAIN_NUM = args.TRAIN_NUM
+        if args.RESULTS_PATH is not None:
+            self.RESULTS_PATH = args.RESULTS_PATH
+        if args.VALIDATE is not None:
+            self.VALIDATE = args.VALIDATE
+        if args.VALIDATE_ON_TEST is not None:
+            self.VALIDATE_ON_TEST = args.VALIDATE_ON_TEST
+        if args.VALIDATION_N_EPOCHS is not None:
+            self.VALIDATION_N_EPOCHS = args.VALIDATION_N_EPOCHS
+        if args.USE_BEST_MODEL is not None:
+            self.USE_BEST_MODEL = args.USE_BEST_MODEL
+        if args.ON_DEMAND_READ is not None:
+            self.TRAIN_NUM = args.ON_DEMAND_READ
+        if args.REPRODUCIBLE_RUN is not None:
+            self.TRAIN_NUM = args.REPRODUCIBLE_RUN
+        if args.MEMORY_FIT is not None:
+            self.TRAIN_NUM = args.MEMORY_FIT
+        if args.SAVE_IMAGES is not None:
+            self.SAVE_IMAGES = args.SAVE_IMAGES
+        if args.DILATE is not None:
+            self.DILATE = args.DILATE
 
     def get_as_dict(self):
         params = {
